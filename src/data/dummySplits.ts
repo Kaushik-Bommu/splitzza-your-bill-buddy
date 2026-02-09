@@ -1,4 +1,4 @@
-/** Dummy data for split events (Splitwise-style) */
+/** Dummy data for recent bill splits */
 export interface SplitItem {
   id: string;
   name: string;
@@ -8,8 +8,7 @@ export interface SplitItem {
 
 export interface Split {
   id: string;
-  groupName: string;
-  emoji: string;
+  restaurantName: string;
   date: string;
   totalAmount: number;
   people: string[];
@@ -20,8 +19,7 @@ export interface Split {
 export const dummySplits: Split[] = [
   {
     id: "1",
-    groupName: "Friday Night Gang",
-    emoji: "🍕",
+    restaurantName: "Mario's Pizzeria",
     date: "2026-02-07",
     totalAmount: 78.50,
     people: ["You", "Alex", "Sam"],
@@ -35,8 +33,7 @@ export const dummySplits: Split[] = [
   },
   {
     id: "2",
-    groupName: "Sushi Squad",
-    emoji: "🍣",
+    restaurantName: "Sushi Haven",
     date: "2026-02-04",
     totalAmount: 124.00,
     people: ["You", "Jordan", "Taylor", "Casey"],
@@ -50,8 +47,7 @@ export const dummySplits: Split[] = [
   },
   {
     id: "3",
-    groupName: "Taco Tuesday",
-    emoji: "🌮",
+    restaurantName: "Taco Fiesta",
     date: "2026-01-28",
     totalAmount: 52.75,
     people: ["You", "Morgan"],
@@ -60,37 +56,6 @@ export const dummySplits: Split[] = [
       { id: "3b", name: "Burrito Bowl", amount: 15.25, sharedBy: ["Morgan"] },
       { id: "3c", name: "Nachos Grande", amount: 13.00, sharedBy: ["You", "Morgan"] },
       { id: "3d", name: "Margaritas", amount: 10.00, sharedBy: ["You", "Morgan"] },
-    ],
-    settled: true,
-  },
-  {
-    id: "4",
-    groupName: "Brunch Club",
-    emoji: "🥞",
-    date: "2026-01-20",
-    totalAmount: 96.30,
-    people: ["You", "Alex", "Casey", "Jordan"],
-    items: [
-      { id: "4a", name: "Pancake Stack", amount: 16.00, sharedBy: ["You", "Alex"] },
-      { id: "4b", name: "Eggs Benedict", amount: 19.50, sharedBy: ["Casey"] },
-      { id: "4c", name: "Mimosa Pitcher", amount: 28.00, sharedBy: ["You", "Alex", "Casey", "Jordan"] },
-      { id: "4d", name: "Avocado Toast", amount: 14.80, sharedBy: ["Jordan"] },
-      { id: "4e", name: "Coffee Rounds", amount: 18.00, sharedBy: ["You", "Alex", "Casey", "Jordan"] },
-    ],
-    settled: false,
-  },
-  {
-    id: "5",
-    groupName: "Office Lunch",
-    emoji: "🥗",
-    date: "2026-01-15",
-    totalAmount: 67.20,
-    people: ["You", "Sam", "Taylor"],
-    items: [
-      { id: "5a", name: "Caesar Salad", amount: 14.00, sharedBy: ["You"] },
-      { id: "5b", name: "Club Sandwich", amount: 16.50, sharedBy: ["Sam"] },
-      { id: "5c", name: "Soup & Bread", amount: 12.70, sharedBy: ["Taylor"] },
-      { id: "5d", name: "Drinks & Tip", amount: 24.00, sharedBy: ["You", "Sam", "Taylor"] },
     ],
     settled: true,
   },
