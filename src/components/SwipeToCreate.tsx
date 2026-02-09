@@ -38,7 +38,7 @@ const SwipeToCreate = () => {
     if (x.get() <= SWIPE_THRESHOLD && !triggered) {
       setTriggered(true);
       // Navigate after a brief animation
-      setTimeout(() => navigate("/splits"), 300);
+      setTimeout(() => navigate("/create-bill"), 300);
     } else {
       // Snap back
       animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
