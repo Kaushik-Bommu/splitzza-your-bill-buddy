@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Splits from "./pages/Splits";
 import Friends from "./pages/Friends";
 import SettingsPage from "./pages/SettingsPage";
+import CreateBill from "./pages/CreateBill";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -21,6 +22,7 @@ const App = () => (
         <div className="max-w-md mx-auto relative">
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/create" element={<CreateBill />} />
             <Route path="/splits" element={<Splits />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<SettingsPage />} />
