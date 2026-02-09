@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Plus, Pizza } from "lucide-react";
+import { Pizza } from "lucide-react";
 import { dummySplits } from "@/data/dummySplits";
 import SplitCard from "@/components/SplitCard";
+import SwipeToCreate from "@/components/SwipeToCreate";
 import heroImage from "@/assets/splitzza-hero.png";
 
 /** Home screen — shows recent splits and a CTA to create new ones */
@@ -84,16 +85,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Floating action button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.6, type: "spring", stiffness: 300, damping: 20 }}
-        className="fixed bottom-20 right-5 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-elevated flex items-center justify-center active:scale-95 transition-transform"
-        aria-label="New split"
-      >
-        <Plus className="w-6 h-6" strokeWidth={2.5} />
-      </motion.button>
+      {/* Swipeable food emoji — swipe left to create new split */}
+      <SwipeToCreate />
     </div>
   );
 };
