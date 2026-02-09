@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Splits from "./pages/Splits";
 import Friends from "./pages/Friends";
 import SettingsPage from "./pages/SettingsPage";
+import CreateBill from "./pages/CreateBill";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/splits" element={<Splits />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/create-bill" element={<CreateBill />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
