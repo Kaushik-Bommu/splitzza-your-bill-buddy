@@ -105,70 +105,30 @@ const SwipeToCreate = () => {
         style={{ x, scale: pillScale }}
         className="fixed right-0 top-1/2 -translate-y-1/2 z-50 touch-none cursor-grab active:cursor-grabbing"
       >
-        <div className="flex items-center">
-          {/* Extended handle strip */}
-          <div className="w-3 h-14 bg-primary/20 rounded-l-full" />
-
-          {/* Main pill with breathing animation */}
-          <motion.div
-            className="w-14 h-14 rounded-l-2xl rounded-r-none bg-primary shadow-elevated flex items-center justify-center relative overflow-hidden"
-            animate={
-              !isDragging && !triggered
-                ? {
-                    boxShadow: [
-                      "0 8px 32px -8px hsl(12 76% 61% / 0.15)",
-                      "0 12px 40px -4px hsl(12 76% 61% / 0.35)",
-                      "0 8px 32px -8px hsl(12 76% 61% / 0.15)",
-                    ],
-                  }
-                : {}
-            }
-            transition={
-              !isDragging && !triggered
-                ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
-                : {}
-            }
-          >
-            {/* Shimmer hint */}
-            {!isDragging && !triggered && (
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{
+        {/* Food emoji — no background, just the item */}
+        <motion.span
+          className="text-4xl select-none drop-shadow-lg"
+          style={{ rotate: emojiRotation }}
+          animate={
+            !isDragging && !triggered
+              ? {
+                  y: [0, -4, 0],
+                  scale: [1, 1.1, 1],
+                }
+              : {}
+          }
+          transition={
+            !isDragging && !triggered
+              ? {
                   duration: 2,
                   repeat: Infinity,
-                  repeatDelay: 3,
                   ease: "easeInOut",
-                }}
-              />
-            )}
-
-            {/* Food emoji with gentle rotation */}
-            <motion.span
-              className="text-2xl select-none relative z-10"
-              style={{ rotate: emojiRotation }}
-              animate={
-                !isDragging && !triggered
-                  ? {
-                      y: [0, -3, 0],
-                      scale: [1, 1.08, 1],
-                    }
-                  : {}
-              }
-              transition={
-                !isDragging && !triggered
-                  ? {
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }
-                  : {}
-              }
-            >
-              {food.emoji}
-            </motion.span>
-          </motion.div>
-        </div>
+                }
+              : {}
+          }
+        >
+          {food.emoji}
+        </motion.span>
       </motion.div>
 
       {/* Subtle arrow bounce hint on mount */}
