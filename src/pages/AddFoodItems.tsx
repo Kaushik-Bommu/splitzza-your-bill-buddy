@@ -425,6 +425,7 @@ const AddFoodItems = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
             disabled={items.length === 0}
+            onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount } })}
             className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-40 disabled:shadow-none disabled:cursor-not-allowed bg-primary text-primary-foreground active:scale-[0.98]"
           >
             Finish Split
