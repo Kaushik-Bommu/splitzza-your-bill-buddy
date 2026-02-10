@@ -27,7 +27,9 @@ const CreateBill = () => {
   };
 
   const handleContinue = () => {
-    // TODO: navigate to item-splitting step
+    navigate("/add-items", {
+      state: { selectedFriendIds: selectedFriends, totalAmount: parseFloat(amount) },
+    });
   };
 
   return (
