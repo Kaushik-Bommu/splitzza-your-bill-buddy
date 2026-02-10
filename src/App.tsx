@@ -9,6 +9,7 @@ import Friends from "./pages/Friends";
 import SettingsPage from "./pages/SettingsPage";
 import CreateBill from "./pages/CreateBill";
 import AddFoodItems from "./pages/AddFoodItems";
+import SplitResult from "./pages/SplitResult";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/create-bill" element={<CreateBill />} />
             <Route path="/add-items" element={<AddFoodItems />} />
+            <Route path="/split-result" element={<SplitResult />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
