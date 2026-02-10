@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, X, Users } from "lucide-react";
+import { ArrowLeft, Plus, X, Users, Check, Pencil, UserCheck } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 
@@ -26,6 +26,11 @@ const getFoodEmoji = (name: string): string => {
   return "🍽️";
 };
 
+/** Trigger haptic vibration if supported */
+const haptic = (ms = 15) => {
+  if (navigator.vibrate) navigator.vibrate(ms);
+};
+
 interface FoodItem {
   id: string;
   name: string;
@@ -44,43 +49,87 @@ const AddFoodItems = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pull selected friends & amount from navigation state
   const { selectedFriendIds = [], totalAmount = 0 } = (location.state as any) ?? {};
   const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
-  // Include "You" as a participant
   const allParticipants: Friend[] = [{ id: "me", name: "You" }, ...friends];
 
   const [items, setItems] = useState<FoodItem[]>([]);
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [addFlash, setAddFlash] = useState(false);
 
   const liveEmoji = useMemo(() => getFoodEmoji(itemName), [itemName]);
   const canAdd = itemName.trim().length > 0 && parseFloat(itemPrice) > 0 && selectedPeople.length > 0;
-
   const totalAssigned = items.reduce((s, i) => s + i.price, 0);
+  const allSelected = selectedPeople.length === allParticipants.length;
+
+  const togglePerson = useCallback((id: string) => {
+    haptic();
+    setSelectedPeople((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
+  }, []);
+
+  const toggleAll = useCallback(() => {
+    haptic(25);
+    setSelectedPeople((prev) =>
+      prev.length === allParticipants.length ? [] : allParticipants.map((p) => p.id)
+    );
+  }, [allParticipants]);
 
   const addItem = () => {
     if (!canAdd) return;
-    const newItem: FoodItem = {
-      id: Date.now().toString(),
-      name: itemName.trim(),
-      price: parseFloat(itemPrice),
-      emoji: liveEmoji,
-      sharedBy: selectedPeople,
-    };
-    setItems((prev) => [newItem, ...prev]);
+    haptic(20);
+    setAddFlash(true);
+    setTimeout(() => setAddFlash(false), 400);
+
+    if (editingId) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingId
+            ? { ...item, name: itemName.trim(), price: parseFloat(itemPrice), emoji: liveEmoji, sharedBy: selectedPeople }
+            : item
+        )
+      );
+      setEditingId(null);
+    } else {
+      const newItem: FoodItem = {
+        id: Date.now().toString(),
+        name: itemName.trim(),
+        price: parseFloat(itemPrice),
+        emoji: liveEmoji,
+        sharedBy: selectedPeople,
+      };
+      setItems((prev) => [newItem, ...prev]);
+    }
     setItemName("");
     setItemPrice("");
     setSelectedPeople([]);
   };
 
-  const removeItem = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = (id: string) => {
+    haptic(10);
+    if (editingId === id) cancelEdit();
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
 
-  const togglePerson = (id: string) =>
-    setSelectedPeople((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+  const startEdit = (item: FoodItem) => {
+    haptic();
+    setEditingId(item.id);
+    setItemName(item.name);
+    setItemPrice(item.price.toString());
+    setSelectedPeople(item.sharedBy);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setItemName("");
+    setItemPrice("");
+    setSelectedPeople([]);
+  };
 
   return (
     <motion.div
@@ -109,12 +158,31 @@ const AddFoodItems = () => {
         </motion.h1>
       </div>
 
+      {/* Editing banner */}
+      <AnimatePresence>
+        {editingId && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mx-5 mb-3 bg-secondary/20 border border-secondary/30 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+              <span className="text-xs font-bold text-secondary">✏️ Editing item</span>
+              <button onClick={cancelEdit} className="text-xs font-semibold text-muted-foreground">
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Input section */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="px-5 space-y-4"
+        className={`px-5 space-y-4 transition-all duration-300 ${addFlash ? "scale-[0.995]" : ""}`}
       >
         {/* Food name + emoji preview */}
         <div>
@@ -126,6 +194,7 @@ const AddFoodItems = () => {
               key={liveEmoji}
               initial={{ scale: 0.5, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
               className="w-12 h-12 rounded-2xl bg-amber-light flex items-center justify-center text-2xl shadow-card shrink-0"
             >
               {liveEmoji}
@@ -160,39 +229,85 @@ const AddFoodItems = () => {
 
         {/* Who ate this? */}
         <div>
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            Who ate this?
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Who ate this?
+            </label>
+            <button
+              onClick={toggleAll}
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all duration-200 ${
+                allSelected
+                  ? "bg-primary/10 text-primary"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {allSelected ? "Deselect All" : "Select All"}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {allParticipants.map((p) => {
               const active = selectedPeople.includes(p.id);
+              const initial = p.name.charAt(0).toUpperCase();
               return (
                 <motion.button
                   key={p.id}
-                  whileTap={{ scale: 0.93 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => togglePerson(p.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 ${
+                  layout
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 ${
                     active
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-card text-foreground border-border/50 shadow-card"
                   }`}
                 >
+                  <span
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-200 ${
+                      active ? "bg-primary-foreground/20" : "bg-muted"
+                    }`}
+                  >
+                    {active ? <Check className="w-3 h-3" /> : initial}
+                  </span>
                   {p.name}
                 </motion.button>
               );
             })}
           </div>
+
+          {/* No friends hint */}
+          <AnimatePresence>
+            {selectedPeople.length === 0 && (itemName.trim() || itemPrice) && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="text-[11px] text-destructive/80 font-medium mt-2 flex items-center gap-1"
+              >
+                <UserCheck className="w-3 h-3" /> Select at least one person
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Add button */}
+        {/* Add / Update button */}
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={addItem}
           disabled={!canAdd}
-          className="w-full py-3 rounded-2xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed bg-accent text-accent-foreground shadow-card active:shadow-none"
+          className={`w-full py-3 rounded-2xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-card active:shadow-none ${
+            editingId
+              ? "bg-secondary text-secondary-foreground"
+              : "bg-accent text-accent-foreground"
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          Add Item
+          {editingId ? (
+            <>
+              <Check className="w-4 h-4" /> Update Item
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" /> Add Item
+            </>
+          )}
         </motion.button>
       </motion.div>
 
@@ -218,7 +333,13 @@ const AddFoodItems = () => {
               exit={{ opacity: 0 }}
               className="text-center py-10"
             >
-              <p className="text-4xl mb-2">🍽️</p>
+              <motion.p
+                animate={{ y: [0, -6, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="text-4xl mb-2"
+              >
+                🍽️
+              </motion.p>
               <p className="text-sm text-muted-foreground">Add items to split the bill</p>
             </motion.div>
           ) : (
@@ -227,14 +348,26 @@ const AddFoodItems = () => {
                 key={item.id}
                 layout
                 initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  y: 0,
+                  boxShadow: editingId === item.id
+                    ? "0 0 0 2px hsl(var(--secondary))"
+                    : "0 2px 16px -2px hsl(20 25% 15% / 0.06)",
+                }}
                 exit={{ opacity: 0, scale: 0.85, x: -60 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                className="bg-card border border-border/50 rounded-2xl p-4 shadow-card mb-3 flex items-start gap-3"
+                className={`bg-card border rounded-2xl p-4 mb-3 flex items-start gap-3 ${
+                  editingId === item.id ? "border-secondary/40" : "border-border/50"
+                }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-light flex items-center justify-center text-xl shrink-0">
+                <motion.div
+                  whileHover={{ rotate: 10 }}
+                  className="w-10 h-10 rounded-xl bg-amber-light flex items-center justify-center text-xl shrink-0"
+                >
                   {item.emoji}
-                </div>
+                </motion.div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="font-display font-bold text-sm text-foreground truncate">
@@ -262,13 +395,22 @@ const AddFoodItems = () => {
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5"
-                  aria-label={`Remove ${item.name}`}
-                >
-                  <X className="w-3 h-3 text-destructive" />
-                </button>
+                <div className="flex flex-col gap-1.5 shrink-0 mt-0.5">
+                  <button
+                    onClick={() => startEdit(item)}
+                    className="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center"
+                    aria-label={`Edit ${item.name}`}
+                  >
+                    <Pencil className="w-3 h-3 text-secondary" />
+                  </button>
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center"
+                    aria-label={`Remove ${item.name}`}
+                  >
+                    <X className="w-3 h-3 text-destructive" />
+                  </button>
+                </div>
               </motion.div>
             ))
           )}
