@@ -4,14 +4,12 @@ import { ArrowLeft, DollarSign, UserPlus, Link2, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 
-/** Page transition variants for smooth slide-in */
 const pageVariants = {
   initial: { opacity: 0, x: 60 },
   animate: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
   exit: { opacity: 0, x: 60, transition: { duration: 0.25, ease: "easeIn" as const } },
 };
 
-/** Create Bill screen — enter amount, pick friends, then continue */
 const CreateBill = () => {
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
@@ -38,40 +36,42 @@ const CreateBill = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="min-h-screen pb-28 bg-background"
+      className="min-h-screen pb-32 bg-background"
     >
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-5 pt-12 pb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-card border border-border/50 shadow-card flex items-center justify-center"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-        </button>
-        <motion.h1
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="font-display font-black text-xl text-foreground"
-        >
-          New Split
-        </motion.h1>
+      <div className="gradient-hero px-6 pt-14 pb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-2xl glass-strong border border-border/30 shadow-card flex items-center justify-center"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-foreground" />
+          </button>
+          <motion.h1
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="font-display font-black text-xl text-foreground"
+          >
+            New Split
+          </motion.h1>
+        </div>
       </div>
 
-      {/* Bill amount input */}
+      {/* Bill amount */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="px-5 mt-2"
+        className="px-6 mt-2"
       >
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
           Total Bill Amount
         </label>
         <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <DollarSign className="w-4 h-4 text-primary" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl gradient-primary-btn flex items-center justify-center shadow-sm">
+            <DollarSign className="w-4 h-4 text-primary-foreground" />
           </div>
           <input
             type="number"
@@ -79,7 +79,7 @@ const CreateBill = () => {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-card border border-border/50 rounded-2xl py-4 pl-16 pr-5 text-2xl font-display font-bold text-foreground placeholder:text-muted-foreground/40 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+            className="w-full bg-card border border-border/30 rounded-2xl py-4 pl-[4.5rem] pr-6 text-2xl font-display font-bold text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
           />
         </div>
       </motion.div>
@@ -89,14 +89,13 @@ const CreateBill = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="px-5 mt-8"
+        className="px-6 mt-8"
       >
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3.5 block">
           Split with
         </label>
 
-        {/* Friend chips */}
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           {dummyFriends.map((friend) => (
             <FriendChip
               key={friend.id}
@@ -107,28 +106,26 @@ const CreateBill = () => {
           ))}
         </div>
 
-        {/* Invite via link */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.45 }}
           onClick={() => setShowInviteHint(true)}
-          className="mt-4 flex items-center gap-2 text-sm font-semibold text-primary active:scale-95 transition-transform"
+          className="mt-5 flex items-center gap-2.5 text-sm font-bold text-primary active:scale-95 transition-transform"
         >
-          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <Link2 className="w-4 h-4 text-primary" />
           </div>
           Invite via link
         </motion.button>
 
-        {/* Invite hint toast */}
         <AnimatePresence>
           {showInviteHint && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className="mt-3 bg-card border border-border/50 rounded-xl p-3 shadow-card"
+              className="mt-3 gradient-card-warm border border-border/30 rounded-2xl p-4 shadow-card"
             >
               <p className="text-xs text-muted-foreground">
                 🔗 Share link copied! Your friend can join this split from the link.{" "}
@@ -139,18 +136,18 @@ const CreateBill = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Selected count indicator */}
+      {/* Selected count */}
       <AnimatePresence>
         {selectedFriends.length > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="px-5 mt-6"
+            className="px-6 mt-7"
           >
-            <div className="bg-sage-light rounded-xl p-3 flex items-center gap-2">
+            <div className="gradient-card-sage border border-accent/15 rounded-2xl p-4 flex items-center gap-2.5">
               <UserPlus className="w-4 h-4 text-accent" />
-              <p className="text-xs font-medium text-accent">
+              <p className="text-xs font-semibold text-accent">
                 {selectedFriends.length} friend{selectedFriends.length > 1 ? "s" : ""} selected
                 {amount && parseFloat(amount) > 0 && (
                   <span className="text-muted-foreground">
@@ -164,7 +161,7 @@ const CreateBill = () => {
       </AnimatePresence>
 
       {/* Continue button */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-background via-background to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-6 gradient-bottom-fade">
         <div className="max-w-md mx-auto">
           <motion.button
             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +169,7 @@ const CreateBill = () => {
             transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 25 }}
             onClick={handleContinue}
             disabled={!isValid}
-            className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-40 disabled:shadow-none disabled:cursor-not-allowed bg-primary text-primary-foreground active:scale-[0.98]"
+            className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed gradient-primary-btn text-primary-foreground active:scale-[0.98]"
           >
             Continue
           </motion.button>
@@ -182,7 +179,6 @@ const CreateBill = () => {
   );
 };
 
-/** Selectable friend chip with animation */
 const FriendChip = ({
   friend,
   selected,
@@ -192,7 +188,6 @@ const FriendChip = ({
   selected: boolean;
   onToggle: () => void;
 }) => {
-  // Generate a consistent initial from the friend's name
   const initial = friend.name.charAt(0).toUpperCase();
 
   return (
@@ -200,24 +195,24 @@ const FriendChip = ({
       whileTap={{ scale: 0.93 }}
       onClick={onToggle}
       className={`
-        flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all duration-200
+        flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border transition-all duration-200
         ${
           selected
-            ? "bg-primary/10 border-primary/30 shadow-sm"
-            : "bg-card border-border/50 shadow-card"
+            ? "bg-primary/10 border-primary/25 shadow-sm"
+            : "gradient-card-warm border-border/30 shadow-card"
         }
       `}
     >
       <div
         className={`
-          w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200
-          ${selected ? "bg-primary text-primary-foreground" : "bg-coral-light text-primary"}
+          w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all duration-200
+          ${selected ? "gradient-primary-btn text-primary-foreground shadow-sm" : "bg-coral-light text-primary"}
         `}
       >
-        {selected ? <Check className="w-3.5 h-3.5" /> : initial}
+        {selected ? <Check className="w-4 h-4" /> : initial}
       </div>
       <span
-        className={`text-sm font-semibold transition-colors duration-200 ${
+        className={`text-sm font-bold transition-colors duration-200 ${
           selected ? "text-primary" : "text-foreground"
         }`}
       >

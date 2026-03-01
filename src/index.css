@@ -45,9 +45,11 @@
     --sage-light: 160 40% 92%;
     --cream: 30 33% 97%;
 
-    --shadow-soft: 0 4px 24px -4px hsl(20 25% 15% / 0.08);
-    --shadow-card: 0 2px 16px -2px hsl(20 25% 15% / 0.06);
-    --shadow-elevated: 0 8px 32px -8px hsl(12 76% 61% / 0.15);
+    /* Premium shadows */
+    --shadow-soft: 0 4px 24px -4px hsl(20 25% 15% / 0.06);
+    --shadow-card: 0 2px 20px -4px hsl(20 25% 15% / 0.05), 0 1px 3px hsl(20 25% 15% / 0.04);
+    --shadow-elevated: 0 12px 40px -8px hsl(12 76% 61% / 0.18);
+    --shadow-glow: 0 0 30px -5px hsl(12 76% 61% / 0.12);
 
     --font-display: 'Nunito', sans-serif;
     --font-body: 'DM Sans', sans-serif;
@@ -96,9 +98,15 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -111,5 +119,77 @@
   }
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
+  }
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Premium gradient backgrounds */
+  .gradient-hero {
+    background: linear-gradient(
+      160deg,
+      hsl(var(--coral-light)) 0%,
+      hsl(var(--amber-light)) 40%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  .gradient-card-warm {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--coral-light) / 0.3) 100%
+    );
+  }
+
+  .gradient-card-sage {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--sage-light) / 0.3) 100%
+    );
+  }
+
+  .gradient-primary-btn {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(12 76% 55%) 100%
+    );
+  }
+
+  .gradient-accent-btn {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--accent)) 0%,
+      hsl(160 45% 42%) 100%
+    );
+  }
+
+  .gradient-bottom-fade {
+    background: linear-gradient(
+      to top,
+      hsl(var(--background)) 0%,
+      hsl(var(--background)) 60%,
+      hsl(var(--background) / 0) 100%
+    );
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  }
+
+  .glass-strong {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  }
+
+  /* Safe area for bottom nav */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
