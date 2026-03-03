@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, DollarSign, UserPlus, Link2, Check } from "lucide-react";
+import { ArrowLeft, IndianRupee, UserPlus, Link2, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 
@@ -12,11 +12,13 @@ const pageVariants = {
 
 const CreateBill = () => {
   const navigate = useNavigate();
+  const [splitName, setSplitName] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [showInviteHint, setShowInviteHint] = useState(false);
+  const [showSplitNameError, setShowSplitNameError] = useState(false);
 
-  const isValid = parseFloat(amount) > 0 && selectedFriends.length > 0;
+  const isValid = splitName.trim() !== "" && parseFloat(amount) > 0 && selectedFriends.length > 0;
 
   const toggleFriend = (id: string) => {
     setSelectedFriends((prev) =>
@@ -25,8 +27,12 @@ const CreateBill = () => {
   };
 
   const handleContinue = () => {
+    if (!splitName.trim()) {
+      setShowSplitNameError(true);
+      return;
+    }
     navigate("/add-items", {
-      state: { selectedFriendIds: selectedFriends, totalAmount: parseFloat(amount) },
+      state: { splitName: splitName.trim(), selectedFriendIds: selectedFriends, totalAmount: parseFloat(amount) },
     });
   };
 
@@ -63,19 +69,54 @@ const CreateBill = () => {
         </div>
       </div>
 
+      {/* Split Name */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="px-6 mt-2"
+      >
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+          Split Name <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          placeholder="e.g., Dinner at Mario's"
+          value={splitName}
+          onChange={(e) => {
+            setSplitName(e.target.value);
+            if (e.target.value.trim()) {
+              setShowSplitNameError(false);
+            }
+          }}
+          className={`w-full bg-card border rounded-2xl py-4 px-4 text-base font-display font-bold text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all ${
+            showSplitNameError ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : "border-border/30"
+          }`}
+        />
+        {showSplitNameError && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-xs text-red-500 mt-1.5 font-medium"
+          >
+            Please enter a split name to continue
+          </motion.p>
+        )}
+      </motion.div>
+
       {/* Bill amount */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="px-6 mt-2"
+        className="px-6 mt-6"
       >
         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
           Total Bill Amount
         </label>
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl gradient-primary-btn flex items-center justify-center shadow-sm">
-            <DollarSign className="w-4 h-4 text-primary-foreground" />
+            <IndianRupee className="w-4 h-4 text-primary-foreground" />
           </div>
           <input
             type="number"
@@ -155,7 +196,7 @@ const CreateBill = () => {
                 {selectedFriends.length} friend{selectedFriends.length > 1 ? "s" : ""} selected
                 {amount && parseFloat(amount) > 0 && (
                   <span className="text-muted-foreground">
-                    {" "}· ~${(parseFloat(amount) / (selectedFriends.length + 1)).toFixed(2)} each
+                    {" "}· ~₹{(parseFloat(amount) / (selectedFriends.length + 1)).toFixed(2)} each
                   </span>
                 )}
               </p>

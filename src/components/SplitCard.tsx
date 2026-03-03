@@ -51,7 +51,7 @@ const SplitCard = ({ split, index }: SplitCardProps) => {
           <div className="text-right">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Your share</p>
             <p className="font-display font-extrabold text-xl text-foreground mt-0.5">
-              ${yourShare.toFixed(2)}
+              ₹{yourShare.toFixed(2)}
             </p>
           </div>
           {split.settled ? (
@@ -68,7 +68,7 @@ const SplitCard = ({ split, index }: SplitCardProps) => {
 
       <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-border/30">
         <p className="text-xs text-muted-foreground">
-          Total: <span className="font-semibold text-foreground">${split.totalAmount.toFixed(2)}</span>
+          Total: <span className="font-semibold text-foreground">₹{split.totalAmount.toFixed(2)}</span>
           {" · "}{split.items.length} items
         </p>
         <ChevronRight className="w-4 h-4 text-muted-foreground/60" />

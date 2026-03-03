@@ -45,7 +45,7 @@ const AddFoodItems = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { selectedFriendIds = [], totalAmount = 0 } = (location.state as any) ?? {};
+  const { selectedFriendIds = [], totalAmount = 0, splitName = "" } = (location.state as any) ?? {};
   const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
   const allParticipants: Friend[] = [{ id: "me", name: "You" }, ...friends];
 
@@ -215,7 +215,7 @@ const AddFoodItems = () => {
               Price
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-primary">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-primary">₹</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -318,7 +318,7 @@ const AddFoodItems = () => {
             </h2>
             {items.length > 0 && (
               <span className="text-xs font-bold text-primary">
-                ${totalAssigned.toFixed(2)} added
+                ₹{totalAssigned.toFixed(2)} added
               </span>
             )}
           </div>
@@ -373,7 +373,7 @@ const AddFoodItems = () => {
                         {item.name}
                       </p>
                       <p className="font-display font-black text-sm text-primary ml-2 shrink-0">
-                        ${item.price.toFixed(2)}
+                        ₹{item.price.toFixed(2)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -390,7 +390,7 @@ const AddFoodItems = () => {
                         );
                       })}
                       <span className="text-[10px] text-muted-foreground ml-1">
-                        · ${(item.price / item.sharedBy.length).toFixed(2)} each
+                        · ₹{(item.price / item.sharedBy.length).toFixed(2)} each
                       </span>
                     </div>
                   </div>
@@ -424,7 +424,7 @@ const AddFoodItems = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
               disabled={items.length === 0}
-              onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount } })}
+              onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount, splitName } })}
               className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed gradient-primary-btn text-primary-foreground active:scale-[0.98]"
             >
               Finish Split

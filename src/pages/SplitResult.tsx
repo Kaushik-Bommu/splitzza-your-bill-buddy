@@ -39,7 +39,7 @@ const cardVariants = {
 const SplitResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items = [], selectedFriendIds = [], totalAmount = 0 } = (location.state as any) ?? {};
+  const { items = [], selectedFriendIds = [], totalAmount = 0, splitName = "" } = (location.state as any) ?? {};
 
   const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
   const allParticipants = [{ id: "me", name: "You" }, ...friends];
@@ -72,9 +72,9 @@ const SplitResult = () => {
   const handleShare = () => {
     if (navigator.vibrate) navigator.vibrate(15);
     const summary = breakdowns
-      .map((b) => `${b.name}: $${b.total.toFixed(2)}`)
+      .map((b) => `${b.name}: ₹${b.total.toFixed(2)}`)
       .join("\n");
-    const text = `🍕 Splitzza Summary\n\n${summary}\n\nTotal: $${grandTotal.toFixed(2)}`;
+    const text = `🍕 Splitzza Summary\n\n${summary}\n\nTotal: ₹${grandTotal.toFixed(2)}`;
 
     if (navigator.share) {
       navigator.share({ title: "Splitzza Split", text }).catch(() => {});
@@ -127,7 +127,7 @@ const SplitResult = () => {
           </div>
           <div>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Bill</p>
-            <p className="font-display font-black text-2xl text-foreground">${grandTotal.toFixed(2)}</p>
+            <p className="font-display font-black text-2xl text-foreground">₹{grandTotal.toFixed(2)}</p>
           </div>
           <div className="ml-auto flex items-center gap-1.5 bg-accent/15 px-3 py-1.5 rounded-full">
             <Check className="w-3.5 h-3.5 text-accent" />
@@ -162,7 +162,7 @@ const SplitResult = () => {
                     <p className="text-[11px] text-muted-foreground mt-0.5">{person.items.length} item{person.items.length !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
-                <p className="font-display font-black text-xl text-accent">${person.total.toFixed(2)}</p>
+                <p className="font-display font-black text-xl text-accent">₹{person.total.toFixed(2)}</p>
               </div>
 
               <div className="space-y-2">
@@ -172,7 +172,7 @@ const SplitResult = () => {
                       <span>{item.emoji}</span>
                       <span className="font-medium">{item.name}</span>
                     </span>
-                    <span className="text-xs font-bold text-muted-foreground">${item.share.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-muted-foreground">₹{item.share.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
