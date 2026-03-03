@@ -36,8 +36,12 @@ const CreateBill = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="min-h-screen pb-32 bg-background"
+      className="min-h-screen flex flex-col bg-background"
     >
+
+
+    {/* {Scrollable Content} */}
+    <div className="flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
       {/* Top bar */}
       <div className="gradient-hero px-6 pt-14 pb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -159,9 +163,9 @@ const CreateBill = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
+    
       {/* Continue button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 gradient-bottom-fade">
+      <div className="p-6 gradient-bottom-fade bg-background">
         <div className="max-w-md mx-auto">
           <motion.button
             initial={{ opacity: 0, y: 20 }}
@@ -174,7 +178,9 @@ const CreateBill = () => {
             Continue
           </motion.button>
         </div>
-      </div>
+      </div>    
+    </div>
+      
     </motion.div>
   );
 };
