@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Share2, CircleDollarSign } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends } from "@/data/dummyFriends";
 import { toast } from "sonner";
+import { saveSplit, createSplitObject } from "@/lib/splitStorage";
 
 interface FoodItem {
   id: string;
@@ -66,7 +67,14 @@ const SplitResult = () => {
 
   const handleSettle = () => {
     if (navigator.vibrate) navigator.vibrate(20);
-    toast.success("Bill settled! 🎉", { description: "Everyone has been notified." });
+    
+    // Create and save the split to localStorage
+    const participants = allParticipants.map((p) => p.name);
+    const split = createSplitObject(splitName, grandTotal, items, participants);
+    saveSplit(split);
+    
+    toast.success("Split saved successfully", { description: "Your split has been saved." });
+    navigate("/splits");
   };
 
   const handleShare = () => {

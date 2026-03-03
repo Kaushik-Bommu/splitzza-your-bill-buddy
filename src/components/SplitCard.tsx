@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
-import { Check, ChevronRight, Users } from "lucide-react";
+import { Check, ChevronRight, Users, Trash2 } from "lucide-react";
 import type { Split } from "@/data/dummySplits";
 import { format, parseISO } from "date-fns";
 
 interface SplitCardProps {
   split: Split;
   index: number;
+  onDelete?: (id: string) => void;
 }
 
-const SplitCard = ({ split, index }: SplitCardProps) => {
+const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
   const yourShare = split.items.reduce((total, item) => {
     if (item.sharedBy.includes("You")) {
       return total + item.amount / item.sharedBy.length;
@@ -16,12 +17,20 @@ const SplitCard = ({ split, index }: SplitCardProps) => {
     return total;
   }, 0);
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(split.id);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, x: -20 }}
       transition={{ delay: index * 0.1, duration: 0.4, ease: "easeOut" }}
-      className="gradient-card-warm rounded-3xl p-5 shadow-card border border-border/30 active:scale-[0.98] transition-transform cursor-pointer"
+      className="gradient-card-warm rounded-3xl p-5 shadow-card border border-border/30 active:scale-[0.98] transition-transform cursor-pointer relative group"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -71,7 +80,18 @@ const SplitCard = ({ split, index }: SplitCardProps) => {
           Total: <span className="font-semibold text-foreground">₹{split.totalAmount.toFixed(2)}</span>
           {" · "}{split.items.length} items
         </p>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+        <div className="flex items-center gap-2">
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              className="p-1.5 rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Delete split"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+        </div>
       </div>
     </motion.div>
   );

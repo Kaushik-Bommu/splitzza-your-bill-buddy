@@ -1,8 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, X, Users, Check, Pencil, UserCheck } from "lucide-react";
+import { ArrowLeft, Plus, X, Users, Check, Pencil, UserCheck, Wallet } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
+import { toast } from "sonner";
 
 const FOOD_EMOJI_MAP: Record<string, string> = {
   pizza: "🍕", burger: "🍔", fries: "🍟", biryani: "🍛", rice: "🍚",
@@ -59,7 +60,9 @@ const AddFoodItems = () => {
   const liveEmoji = useMemo(() => getFoodEmoji(itemName), [itemName]);
   const canAdd = itemName.trim().length > 0 && parseFloat(itemPrice) > 0 && selectedPeople.length > 0;
   const totalAssigned = items.reduce((s, i) => s + i.price, 0);
+  const remainingBalance = totalAmount - totalAssigned;
   const allSelected = selectedPeople.length === allParticipants.length;
+  const isTotalMatched = totalAssigned === totalAmount;
 
   const togglePerson = useCallback((id: string) => {
     haptic();
@@ -77,6 +80,18 @@ const AddFoodItems = () => {
 
   const addItem = () => {
     if (!canAdd) return;
+    
+    const newItemPrice = parseFloat(itemPrice);
+    
+    // Check if adding this item would exceed the total bill amount
+    if (totalAssigned + newItemPrice > totalAmount) {
+      haptic(30);
+      toast.error("Total items exceed bill amount!", {
+        description: `Remaining balance: ₹${remainingBalance.toFixed(2)}`,
+      });
+      return;
+    }
+    
     haptic(20);
     setAddFlash(true);
     setTimeout(() => setAddFlash(false), 400);
@@ -85,7 +100,7 @@ const AddFoodItems = () => {
       setItems((prev) =>
         prev.map((item) =>
           item.id === editingId
-            ? { ...item, name: itemName.trim(), price: parseFloat(itemPrice), emoji: liveEmoji, sharedBy: selectedPeople }
+            ? { ...item, name: itemName.trim(), price: newItemPrice, emoji: liveEmoji, sharedBy: selectedPeople }
             : item
         )
       );
@@ -94,7 +109,7 @@ const AddFoodItems = () => {
       const newItem: FoodItem = {
         id: Date.now().toString(),
         name: itemName.trim(),
-        price: parseFloat(itemPrice),
+        price: newItemPrice,
         emoji: liveEmoji,
         sharedBy: selectedPeople,
       };
@@ -127,6 +142,43 @@ const AddFoodItems = () => {
     setSelectedPeople([]);
   };
 
+  // Balance card styling based on state
+  const getBalanceStyles = () => {
+    if (isTotalMatched) {
+      return {
+        bg: "bg-sage-light/50",
+        border: "border-accent/20",
+        iconBg: "bg-accent/15",
+        iconColor: "text-accent",
+        textColor: "text-accent",
+        amountColor: "text-foreground",
+        label: "Allocated",
+      };
+    } else if (remainingBalance < 0) {
+      return {
+        bg: "bg-red-50/60",
+        border: "border-red-200/30",
+        iconBg: "bg-red-100/60",
+        iconColor: "text-red-500",
+        textColor: "text-red-600",
+        amountColor: "text-red-600",
+        label: "Over budget",
+      };
+    } else {
+      return {
+        bg: "bg-amber-50/40",
+        border: "border-amber-200/25",
+        iconBg: "bg-amber-100/50",
+        iconColor: "text-amber-600",
+        textColor: "text-amber-700",
+        amountColor: "text-foreground",
+        label: "Remaining",
+      };
+    }
+  };
+
+  const balanceStyles = getBalanceStyles();
+
   return (
     <motion.div
       variants={pageVariants}
@@ -157,6 +209,40 @@ const AddFoodItems = () => {
             </motion.h1>
           </div>
         </div>
+
+        {/* Remaining balance card - Premium financial status widget */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
+          className={`mx-6 mt-4 mb-5 rounded-2xl px-4 py-3.5 flex items-center justify-between glass-strong border ${balanceStyles.border} ${balanceStyles.bg}`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl ${balanceStyles.iconBg} flex items-center justify-center`}>
+              {isTotalMatched ? (
+                <Check className={`w-4 h-4 ${balanceStyles.iconColor}`} />
+              ) : (
+                <Wallet className={`w-4 h-4 ${balanceStyles.iconColor}`} />
+              )}
+            </div>
+            <div>
+              <p className={`text-[10px] font-bold uppercase tracking-wider ${balanceStyles.textColor}`}>
+                {balanceStyles.label}
+              </p>
+              <p className={`text-xs font-medium text-muted-foreground`}>
+                of ₹{totalAmount.toFixed(2)}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`font-display font-black text-lg ${balanceStyles.amountColor}`}>
+              ₹{Math.abs(remainingBalance).toFixed(2)}
+            </p>
+            {!isTotalMatched && remainingBalance < 0 && (
+              <p className="text-[9px] font-medium text-red-500">over budget</p>
+            )}
+          </div>
+        </motion.div>
 
         {/* Editing banner */}
         <AnimatePresence>
@@ -423,7 +509,7 @@ const AddFoodItems = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-              disabled={items.length === 0}
+              disabled={items.length === 0 || !isTotalMatched}
               onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount, splitName } })}
               className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed gradient-primary-btn text-primary-foreground active:scale-[0.98]"
             >
