@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, X, Users, Check, Pencil, UserCheck, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ interface FoodItem {
   id: string;
   name: string;
   price: number;
+  quantity: number;
   emoji: string;
   sharedBy: string[];
 }
@@ -53,13 +54,14 @@ const AddFoodItems = () => {
   const [items, setItems] = useState<FoodItem[]>([]);
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addFlash, setAddFlash] = useState(false);
 
   const liveEmoji = useMemo(() => getFoodEmoji(itemName), [itemName]);
   const canAdd = itemName.trim().length > 0 && parseFloat(itemPrice) > 0 && selectedPeople.length > 0;
-  const totalAssigned = items.reduce((s, i) => s + i.price, 0);
+  const totalAssigned = items.reduce((s, i) => s + (i.price * i.quantity), 0);
   const remainingBalance = totalAmount - totalAssigned;
   const allSelected = selectedPeople.length === allParticipants.length;
   const isTotalMatched = totalAssigned === totalAmount;
@@ -82,9 +84,10 @@ const AddFoodItems = () => {
     if (!canAdd) return;
     
     const newItemPrice = parseFloat(itemPrice);
+    const totalItemPrice = newItemPrice * quantity;
     
     // Check if adding this item would exceed the total bill amount
-    if (totalAssigned + newItemPrice > totalAmount) {
+    if (totalAssigned + totalItemPrice > totalAmount) {
       haptic(30);
       toast.error("Total items exceed bill amount!", {
         description: `Remaining balance: ₹${remainingBalance.toFixed(2)}`,
@@ -100,7 +103,7 @@ const AddFoodItems = () => {
       setItems((prev) =>
         prev.map((item) =>
           item.id === editingId
-            ? { ...item, name: itemName.trim(), price: newItemPrice, emoji: liveEmoji, sharedBy: selectedPeople }
+            ? { ...item, name: itemName.trim(), price: newItemPrice, quantity, emoji: liveEmoji, sharedBy: selectedPeople }
             : item
         )
       );
@@ -110,6 +113,7 @@ const AddFoodItems = () => {
         id: Date.now().toString(),
         name: itemName.trim(),
         price: newItemPrice,
+        quantity,
         emoji: liveEmoji,
         sharedBy: selectedPeople,
       };
@@ -118,6 +122,7 @@ const AddFoodItems = () => {
     setItemName("");
     setItemPrice("");
     setSelectedPeople([]);
+    setQuantity(1);
   };
 
   const removeItem = (id: string) => {
@@ -131,6 +136,7 @@ const AddFoodItems = () => {
     setEditingId(item.id);
     setItemName(item.name);
     setItemPrice(item.price.toString());
+    setQuantity(item.quantity || 1);
     setSelectedPeople(item.sharedBy);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -140,6 +146,7 @@ const AddFoodItems = () => {
     setItemName("");
     setItemPrice("");
     setSelectedPeople([]);
+    setQuantity(1);
   };
 
   // Balance card styling based on state
@@ -313,6 +320,44 @@ const AddFoodItems = () => {
             </div>
           </div>
 
+          {/* Quantity Selector */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+              Quantity
+            </label>
+            <div className="flex items-center justify-center gap-4 rounded-2xl px-4 py-3 gradient-card-warm border border-border/30 shadow-card">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => { if (quantity > 1) { haptic(); setQuantity(quantity - 1); } }}
+                disabled={quantity === 1}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  quantity === 1
+                    ? "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
+                    : "bg-primary/10 text-primary shadow-sm active:shadow-none"
+                }`}
+              >
+                <Minus className="w-4 h-4" />
+              </motion.button>
+              <span className="font-display font-black text-lg text-foreground w-8 text-center">
+                {quantity}
+              </span>
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => { haptic(); setQuantity(quantity + 1); }}
+                className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shadow-sm active:shadow-none transition-all duration-200"
+              >
+                <Plus className="w-4 h-4" />
+              </motion.button>
+            </div>
+            {itemPrice && parseFloat(itemPrice) > 0 && (
+              <p className="text-center text-xs font-medium text-muted-foreground mt-2">
+                Total: ₹{(parseFloat(itemPrice) * quantity).toFixed(2)}
+              </p>
+            )}
+          </div>
+
           {/* Who ate this? */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -458,9 +503,14 @@ const AddFoodItems = () => {
                       <p className="font-display font-bold text-sm text-foreground truncate">
                         {item.name}
                       </p>
-                      <p className="font-display font-black text-sm text-primary ml-2 shrink-0">
-                        ₹{item.price.toFixed(2)}
-                      </p>
+                      <div className="flex items-center gap-2 ml-2 shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {item.quantity} × ₹{item.price.toFixed(2)}
+                        </span>
+                        <p className="font-display font-black text-sm text-primary">
+                          ₹{(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                       <Users className="w-3 h-3 text-muted-foreground shrink-0" />
@@ -476,7 +526,7 @@ const AddFoodItems = () => {
                         );
                       })}
                       <span className="text-[10px] text-muted-foreground ml-1">
-                        · ₹{(item.price / item.sharedBy.length).toFixed(2)} each
+                        · ₹{((item.price * item.quantity) / item.sharedBy.length).toFixed(2)} each
                       </span>
                     </div>
                   </div>
