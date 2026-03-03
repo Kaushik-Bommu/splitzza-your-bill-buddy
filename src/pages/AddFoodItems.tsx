@@ -133,300 +133,303 @@ const AddFoodItems = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="min-h-screen pb-36 bg-background"
+      className="min-h-screen flex flex-col bg-background"
     >
-      {/* Header */}
-      <div className="gradient-hero px-6 pt-14 pb-6">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-2xl glass-strong border border-border/30 shadow-card flex items-center justify-center"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-4 h-4 text-foreground" />
-          </button>
-          <motion.h1
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="font-display font-black text-xl text-foreground"
-          >
-            Add Items
-          </motion.h1>
+      {/* {Scrollable Content} */}
+      <div className="flex-1 overflow-y-auto pb-[4.5rem]">
+        {/* Header */}
+        <div className="gradient-hero px-6 pt-14 pb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-2xl glass-strong border border-border/30 shadow-card flex items-center justify-center"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </button>
+            <motion.h1
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="font-display font-black text-xl text-foreground"
+            >
+              Add Items
+            </motion.h1>
+          </div>
         </div>
-      </div>
 
-      {/* Editing banner */}
-      <AnimatePresence>
-        {editingId && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="mx-6 mb-3 bg-secondary/15 border border-secondary/20 rounded-2xl px-4 py-3 flex items-center justify-between">
-              <span className="text-xs font-bold text-secondary">✏️ Editing item</span>
-              <button onClick={cancelEdit} className="text-xs font-semibold text-muted-foreground">
-                Cancel
+        {/* Editing banner */}
+        <AnimatePresence>
+          {editingId && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mx-6 mb-3 bg-secondary/15 border border-secondary/20 rounded-2xl px-4 py-3 flex items-center justify-between">
+                <span className="text-xs font-bold text-secondary">✏️ Editing item</span>
+                <button onClick={cancelEdit} className="text-xs font-semibold text-muted-foreground">
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Input section */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className={`px-6 space-y-5 transition-all duration-300 ${addFlash ? "scale-[0.995]" : ""}`}
+        >
+          {/* Food name + emoji */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+              Food Item
+            </label>
+            <div className="relative flex items-center gap-3">
+              <motion.div
+                key={liveEmoji}
+                initial={{ scale: 0.5, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                className="w-14 h-14 rounded-2xl bg-amber-light flex items-center justify-center text-2xl shadow-card shrink-0 border border-border/20"
+              >
+                {liveEmoji}
+              </motion.div>
+              <input
+                type="text"
+                placeholder="e.g. Margherita Pizza"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="flex-1 bg-card border border-border/30 rounded-2xl py-3.5 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+              Price
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-primary">$</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={itemPrice}
+                onChange={(e) => setItemPrice(e.target.value)}
+                className="w-full bg-card border border-border/30 rounded-2xl py-3.5 pl-9 pr-4 text-sm font-bold text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Who ate this? */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Who ate this?
+              </label>
+              <button
+                onClick={toggleAll}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
+                  allSelected
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {allSelected ? "Deselect All" : "Select All"}
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Input section */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className={`px-6 space-y-5 transition-all duration-300 ${addFlash ? "scale-[0.995]" : ""}`}
-      >
-        {/* Food name + emoji */}
-        <div>
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
-            Food Item
-          </label>
-          <div className="relative flex items-center gap-3">
-            <motion.div
-              key={liveEmoji}
-              initial={{ scale: 0.5, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-              className="w-14 h-14 rounded-2xl bg-amber-light flex items-center justify-center text-2xl shadow-card shrink-0 border border-border/20"
-            >
-              {liveEmoji}
-            </motion.div>
-            <input
-              type="text"
-              placeholder="e.g. Margherita Pizza"
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              className="flex-1 bg-card border border-border/30 rounded-2xl py-3.5 px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Price */}
-        <div>
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block">
-            Price
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-primary">$</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={itemPrice}
-              onChange={(e) => setItemPrice(e.target.value)}
-              className="w-full bg-card border border-border/30 rounded-2xl py-3.5 pl-9 pr-4 text-sm font-bold text-foreground placeholder:text-muted-foreground/30 shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Who ate this? */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Who ate this?
-            </label>
-            <button
-              onClick={toggleAll}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
-                allSelected
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {allSelected ? "Deselect All" : "Select All"}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            {allParticipants.map((p) => {
-              const active = selectedPeople.includes(p.id);
-              const initial = p.name.charAt(0).toUpperCase();
-              return (
-                <motion.button
-                  key={p.id}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => togglePerson(p.id)}
-                  layout
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all duration-200 ${
-                    active
-                      ? "gradient-primary-btn text-primary-foreground border-primary/20 shadow-sm"
-                      : "gradient-card-warm text-foreground border-border/30 shadow-card"
-                  }`}
-                >
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-200 ${
-                      active ? "bg-primary-foreground/20" : "bg-muted"
+            <div className="flex flex-wrap gap-2.5">
+              {allParticipants.map((p) => {
+                const active = selectedPeople.includes(p.id);
+                const initial = p.name.charAt(0).toUpperCase();
+                return (
+                  <motion.button
+                    key={p.id}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => togglePerson(p.id)}
+                    layout
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all duration-200 ${
+                      active
+                        ? "gradient-primary-btn text-primary-foreground border-primary/20 shadow-sm"
+                        : "gradient-card-warm text-foreground border-border/30 shadow-card"
                     }`}
                   >
-                    {active ? <Check className="w-3 h-3" /> : initial}
-                  </span>
-                  {p.name}
-                </motion.button>
-              );
-            })}
+                    <span
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-200 ${
+                        active ? "bg-primary-foreground/20" : "bg-muted"
+                      }`}
+                    >
+                      {active ? <Check className="w-3 h-3" /> : initial}
+                    </span>
+                    {p.name}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            <AnimatePresence>
+              {selectedPeople.length === 0 && (itemName.trim() || itemPrice) && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-[11px] text-destructive/80 font-medium mt-2.5 flex items-center gap-1"
+                >
+                  <UserCheck className="w-3 h-3" /> Select at least one person
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
-          <AnimatePresence>
-            {selectedPeople.length === 0 && (itemName.trim() || itemPrice) && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="text-[11px] text-destructive/80 font-medium mt-2.5 flex items-center gap-1"
+          {/* Add / Update button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={addItem}
+            disabled={!canAdd}
+            className={`w-full py-3.5 rounded-2xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed shadow-card active:shadow-none ${
+              editingId
+                ? "bg-secondary text-secondary-foreground"
+                : "gradient-accent-btn text-accent-foreground"
+            }`}
+          >
+            {editingId ? (
+              <>
+                <Check className="w-4 h-4" /> Update Item
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" /> Add Item
+              </>
+            )}
+          </motion.button>
+        </motion.div>
+
+        {/* Items list */}
+        <div className="px-6 mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Items ({items.length})
+            </h2>
+            {items.length > 0 && (
+              <span className="text-xs font-bold text-primary">
+                ${totalAssigned.toFixed(2)} added
+              </span>
+            )}
+          </div>
+
+          <AnimatePresence mode="popLayout">
+            {items.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-12"
               >
-                <UserCheck className="w-3 h-3" /> Select at least one person
-              </motion.p>
+                <motion.p
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  className="text-5xl mb-3"
+                >
+                  🍽️
+                </motion.p>
+                <p className="text-sm text-muted-foreground font-medium">Add items to split the bill</p>
+              </motion.div>
+            ) : (
+              items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    boxShadow: editingId === item.id
+                      ? "0 0 0 2px hsl(var(--secondary))"
+                      : "var(--shadow-card)",
+                  }}
+                  exit={{ opacity: 0, scale: 0.85, x: -60 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className={`gradient-card-warm border rounded-3xl p-5 mb-3.5 flex items-start gap-3.5 ${
+                    editingId === item.id ? "border-secondary/30" : "border-border/30"
+                  }`}
+                >
+                  <motion.div
+                    whileHover={{ rotate: 10 }}
+                    className="w-11 h-11 rounded-2xl bg-amber-light flex items-center justify-center text-xl shrink-0 border border-border/20"
+                  >
+                    {item.emoji}
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-display font-bold text-sm text-foreground truncate">
+                        {item.name}
+                      </p>
+                      <p className="font-display font-black text-sm text-primary ml-2 shrink-0">
+                        ${item.price.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      <Users className="w-3 h-3 text-muted-foreground shrink-0" />
+                      {item.sharedBy.map((pid) => {
+                        const person = allParticipants.find((p) => p.id === pid);
+                        return (
+                          <span
+                            key={pid}
+                            className="text-[10px] font-semibold bg-sage-light text-accent px-2 py-0.5 rounded-full"
+                          >
+                            {person?.name ?? pid}
+                          </span>
+                        );
+                      })}
+                      <span className="text-[10px] text-muted-foreground ml-1">
+                        · ${(item.price / item.sharedBy.length).toFixed(2)} each
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 shrink-0 mt-0.5">
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="w-7 h-7 rounded-xl bg-secondary/10 flex items-center justify-center"
+                      aria-label={`Edit ${item.name}`}
+                    >
+                      <Pencil className="w-3 h-3 text-secondary" />
+                    </button>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="w-7 h-7 rounded-xl bg-destructive/10 flex items-center justify-center"
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      <X className="w-3 h-3 text-destructive" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))
             )}
           </AnimatePresence>
         </div>
 
-        {/* Add / Update button */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={addItem}
-          disabled={!canAdd}
-          className={`w-full py-3.5 rounded-2xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed shadow-card active:shadow-none ${
-            editingId
-              ? "bg-secondary text-secondary-foreground"
-              : "gradient-accent-btn text-accent-foreground"
-          }`}
-        >
-          {editingId ? (
-            <>
-              <Check className="w-4 h-4" /> Update Item
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4" /> Add Item
-            </>
-          )}
-        </motion.button>
-      </motion.div>
-
-      {/* Items list */}
-      <div className="px-6 mt-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Items ({items.length})
-          </h2>
-          {items.length > 0 && (
-            <span className="text-xs font-bold text-primary">
-              ${totalAssigned.toFixed(2)} added
-            </span>
-          )}
-        </div>
-
-        <AnimatePresence mode="popLayout">
-          {items.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-12"
+        {/* Bottom bar */}
+        <div className="p-6 gradient-bottom-fade">
+          <div className="max-w-md mx-auto">
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
+              disabled={items.length === 0}
+              onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount } })}
+              className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed gradient-primary-btn text-primary-foreground active:scale-[0.98]"
             >
-              <motion.p
-                animate={{ y: [0, -6, 0] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="text-5xl mb-3"
-              >
-                🍽️
-              </motion.p>
-              <p className="text-sm text-muted-foreground font-medium">Add items to split the bill</p>
-            </motion.div>
-          ) : (
-            items.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  boxShadow: editingId === item.id
-                    ? "0 0 0 2px hsl(var(--secondary))"
-                    : "var(--shadow-card)",
-                }}
-                exit={{ opacity: 0, scale: 0.85, x: -60 }}
-                transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                className={`gradient-card-warm border rounded-3xl p-5 mb-3.5 flex items-start gap-3.5 ${
-                  editingId === item.id ? "border-secondary/30" : "border-border/30"
-                }`}
-              >
-                <motion.div
-                  whileHover={{ rotate: 10 }}
-                  className="w-11 h-11 rounded-2xl bg-amber-light flex items-center justify-center text-xl shrink-0 border border-border/20"
-                >
-                  {item.emoji}
-                </motion.div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-display font-bold text-sm text-foreground truncate">
-                      {item.name}
-                    </p>
-                    <p className="font-display font-black text-sm text-primary ml-2 shrink-0">
-                      ${item.price.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <Users className="w-3 h-3 text-muted-foreground shrink-0" />
-                    {item.sharedBy.map((pid) => {
-                      const person = allParticipants.find((p) => p.id === pid);
-                      return (
-                        <span
-                          key={pid}
-                          className="text-[10px] font-semibold bg-sage-light text-accent px-2 py-0.5 rounded-full"
-                        >
-                          {person?.name ?? pid}
-                        </span>
-                      );
-                    })}
-                    <span className="text-[10px] text-muted-foreground ml-1">
-                      · ${(item.price / item.sharedBy.length).toFixed(2)} each
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 shrink-0 mt-0.5">
-                  <button
-                    onClick={() => startEdit(item)}
-                    className="w-7 h-7 rounded-xl bg-secondary/10 flex items-center justify-center"
-                    aria-label={`Edit ${item.name}`}
-                  >
-                    <Pencil className="w-3 h-3 text-secondary" />
-                  </button>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="w-7 h-7 rounded-xl bg-destructive/10 flex items-center justify-center"
-                    aria-label={`Remove ${item.name}`}
-                  >
-                    <X className="w-3 h-3 text-destructive" />
-                  </button>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 gradient-bottom-fade">
-        <div className="max-w-md mx-auto">
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-            disabled={items.length === 0}
-            onClick={() => navigate("/split-result", { state: { items, selectedFriendIds, totalAmount } })}
-            className="w-full py-4 rounded-2xl font-display font-bold text-base shadow-elevated transition-all duration-200 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed gradient-primary-btn text-primary-foreground active:scale-[0.98]"
-          >
-            Finish Split
-          </motion.button>
+              Finish Split
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>
