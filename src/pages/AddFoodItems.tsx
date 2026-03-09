@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet, AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 import { toast } from "sonner";
@@ -28,13 +28,19 @@ const getFoodEmoji = (name: string): string => {
 
 const haptic = (ms = 15) => { if (navigator.vibrate) navigator.vibrate(ms); };
 
+// New interface with uneven distribution support
+interface SharedByEntry {
+  personId: string;
+  quantity: number;
+}
+
 interface FoodItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   emoji: string;
-  sharedBy: string[];
+  sharedBy: SharedByEntry[];
 }
 
 const pageVariants = {
@@ -55,30 +61,101 @@ const AddFoodItems = () => {
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
+  
+  // New state for per-person portion tracking
+  const [personQuantities, setPersonQuantities] = useState<Record<string, number>>({});
+  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addFlash, setAddFlash] = useState(false);
 
   const liveEmoji = useMemo(() => getFoodEmoji(itemName), [itemName]);
-  const canAdd = itemName.trim().length > 0 && parseFloat(itemPrice) > 0 && selectedPeople.length > 0;
-  const totalAssigned = items.reduce((s, i) => s + (i.price * i.quantity), 0);
-  const remainingBalance = totalAmount - totalAssigned;
-  const allSelected = selectedPeople.length === allParticipants.length;
-  const isTotalMatched = totalAssigned === totalAmount;
 
+  // Calculate total assigned portions for current item
+  const totalAssigned = useMemo(() => {
+    return Object.values(personQuantities).reduce((sum, qty) => sum + qty, 0);
+  }, [personQuantities]);
+
+  // Check if portions are properly assigned
+  const isPortionsValid = totalAssigned === quantity;
+  const hasAnyAssignment = totalAssigned > 0;
+
+  // Can add item validation
+  const canAdd = useMemo(() => {
+    return (
+      itemName.trim().length > 0 &&
+      parseFloat(itemPrice) > 0 &&
+      quantity > 0 &&
+      isPortionsValid &&
+      hasAnyAssignment
+    );
+  }, [itemName, itemPrice, quantity, isPortionsValid, hasAnyAssignment]);
+
+  // Total assigned value (for balance calculation)
+  const totalAssignedValue = items.reduce((s, i) => s + (i.price * i.quantity), 0);
+  const remainingBalance = totalAmount - totalAssignedValue;
+  const isTotalMatched = totalAssignedValue === totalAmount;
+
+  // Toggle person selection (add them to the portion assignment)
   const togglePerson = useCallback((id: string) => {
     haptic();
-    setSelectedPeople((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+    setPersonQuantities((prev) => {
+      if (prev[id]) {
+        // Remove person if already has quantity
+        const { [id]: _, ...rest } = prev;
+        return rest;
+      }
+      // Default to 1 portion when first added
+      return { ...prev, [id]: 1 };
+    });
   }, []);
+
+  // Check if person is selected
+  const isPersonSelected = useCallback((id: string) => {
+    return personQuantities[id] !== undefined && personQuantities[id] > 0;
+  }, [personQuantities]);
+
+  // Increase/decrease portion for a person
+  const updatePortion = useCallback((personId: string, delta: number) => {
+    haptic();
+    setPersonQuantities((prev) => {
+      const current = prev[personId] || 0;
+      const newValue = Math.max(0, current + delta);
+      
+      if (newValue === 0) {
+        const { [personId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [personId]: newValue };
+    });
+  }, []);
+
+  // Reset person quantities
+  const resetPersonQuantities = useCallback(() => {
+    setPersonQuantities({});
+  }, []);
+
+  // Set all participants to equal portions (distributed evenly)
+  const distributeEqually = useCallback(() => {
+    haptic();
+    const portionSize = Math.floor(quantity / allParticipants.length);
+    const remainder = quantity % allParticipants.length;
+    
+    const newQuantities: Record<string, number> = {};
+    allParticipants.forEach((p, index) => {
+      newQuantities[p.id] = portionSize + (index < remainder ? 1 : 0);
+    });
+    setPersonQuantities(newQuantities);
+  }, [quantity, allParticipants]);
 
   const toggleAll = useCallback(() => {
     haptic(25);
-    setSelectedPeople((prev) =>
-      prev.length === allParticipants.length ? [] : allParticipants.map((p) => p.id)
-    );
-  }, [allParticipants]);
+    if (Object.keys(personQuantities).length === allParticipants.length) {
+      setPersonQuantities({});
+    } else {
+      // Distribute equally among all
+      distributeEqually();
+    }
+  }, [allParticipants, personQuantities, distributeEqually]);
 
   const addItem = () => {
     if (!canAdd) return;
@@ -87,7 +164,7 @@ const AddFoodItems = () => {
     const totalItemPrice = newItemPrice * quantity;
     
     // Check if adding this item would exceed the total bill amount
-    if (totalAssigned + totalItemPrice > totalAmount) {
+    if (totalAssignedValue + totalItemPrice > totalAmount) {
       haptic(30);
       toast.error("Total items exceed bill amount!", {
         description: `Remaining balance: ₹${remainingBalance.toFixed(2)}`,
@@ -99,11 +176,23 @@ const AddFoodItems = () => {
     setAddFlash(true);
     setTimeout(() => setAddFlash(false), 400);
 
+    // Convert personQuantities to SharedByEntry array
+    const sharedByEntries: SharedByEntry[] = Object.entries(personQuantities)
+      .filter(([_, qty]) => qty > 0)
+      .map(([personId, qty]) => ({ personId, quantity: qty }));
+
     if (editingId) {
       setItems((prev) =>
         prev.map((item) =>
           item.id === editingId
-            ? { ...item, name: itemName.trim(), price: newItemPrice, quantity, emoji: liveEmoji, sharedBy: selectedPeople }
+            ? { 
+                ...item, 
+                name: itemName.trim(), 
+                price: newItemPrice, 
+                quantity, 
+                emoji: liveEmoji, 
+                sharedBy: sharedByEntries 
+              }
             : item
         )
       );
@@ -115,13 +204,13 @@ const AddFoodItems = () => {
         price: newItemPrice,
         quantity,
         emoji: liveEmoji,
-        sharedBy: selectedPeople,
+        sharedBy: sharedByEntries,
       };
       setItems((prev) => [newItem, ...prev]);
     }
     setItemName("");
     setItemPrice("");
-    setSelectedPeople([]);
+    setPersonQuantities({});
     setQuantity(1);
   };
 
@@ -137,7 +226,14 @@ const AddFoodItems = () => {
     setItemName(item.name);
     setItemPrice(item.price.toString());
     setQuantity(item.quantity || 1);
-    setSelectedPeople(item.sharedBy);
+    
+    // Load person quantities from the item
+    const loadedQuantities: Record<string, number> = {};
+    item.sharedBy.forEach((entry) => {
+      loadedQuantities[entry.personId] = entry.quantity;
+    });
+    setPersonQuantities(loadedQuantities);
+    
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -145,7 +241,7 @@ const AddFoodItems = () => {
     setEditingId(null);
     setItemName("");
     setItemPrice("");
-    setSelectedPeople([]);
+    setPersonQuantities({});
     setQuantity(1);
   };
 
@@ -185,6 +281,7 @@ const AddFoodItems = () => {
   };
 
   const balanceStyles = getBalanceStyles();
+  const allSelected = Object.keys(personQuantities).length === allParticipants.length && hasAnyAssignment;
 
   return (
     <motion.div
@@ -217,7 +314,7 @@ const AddFoodItems = () => {
           </div>
         </div>
 
-        {/* Remaining balance card - Premium financial status widget */}
+        {/* Remaining balance card */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -358,61 +455,149 @@ const AddFoodItems = () => {
             )}
           </div>
 
-          {/* Who ate this? */}
+          {/* Who ate this? - Section 2: Portion Counters */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Who ate this?
               </label>
-              <button
-                onClick={toggleAll}
-                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
-                  allSelected
-                    ? "bg-primary/10 text-primary"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {allSelected ? "Deselect All" : "Select All"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={distributeEqually}
+                  disabled={!hasAnyAssignment}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
+                    hasAnyAssignment
+                      ? "bg-accent/10 text-accent hover:bg-accent/20"
+                      : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
+                  }`}
+                >
+                  Distribute
+                </button>
+                <button
+                  onClick={toggleAll}
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
+                    allSelected
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {allSelected ? "Clear All" : "Select All"}
+                </button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2.5">
+            
+            {/* Assigned counter display */}
+            <div className={`mb-3 rounded-xl px-3 py-2 flex items-center justify-between ${
+              isPortionsValid 
+                ? "bg-sage-light/40 border border-accent/20" 
+                : "bg-red-50/60 border border-red-200/30"
+            }`}>
+              <span className="text-xs font-bold text-muted-foreground">Assigned Portions</span>
+              <div className="flex items-center gap-2">
+                {isPortionsValid ? (
+                  <>
+                    <span className="text-xs font-black text-accent">
+                      {totalAssigned} / {quantity}
+                    </span>
+                    <Check className="w-3.5 h-3.5 text-accent" />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-bold text-red-500">
+                      {totalAssigned} / {quantity}
+                    </span>
+                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Portion counter buttons for each person */}
+            <div className="space-y-2">
               {allParticipants.map((p) => {
-                const active = selectedPeople.includes(p.id);
-                const initial = p.name.charAt(0).toUpperCase();
+                const currentQty = personQuantities[p.id] || 0;
+                const isSelected = currentQty > 0;
+                
                 return (
-                  <motion.button
+                  <motion.div
                     key={p.id}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => togglePerson(p.id)}
                     layout
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all duration-200 ${
-                      active
-                        ? "gradient-primary-btn text-primary-foreground border-primary/20 shadow-sm"
-                        : "gradient-card-warm text-foreground border-border/30 shadow-card"
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all duration-200 ${
+                      isSelected
+                        ? "gradient-card-warm border-primary/20 shadow-sm"
+                        : "bg-muted/20 border-transparent"
                     }`}
                   >
-                    <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-200 ${
-                        active ? "bg-primary-foreground/20" : "bg-muted"
-                      }`}
-                    >
-                      {active ? <Check className="w-3 h-3" /> : initial}
-                    </span>
-                    {p.name}
-                  </motion.button>
+                    {/* Person name */}
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-200 ${
+                          isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {p.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className={`text-xs font-bold ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
+                        {p.name}
+                      </span>
+                    </div>
+                    
+                    {/* Portion counter */}
+                    <div className="flex items-center gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.85 }}
+                        whileHover={{ scale: 1.05 }}
+                        onClick={() => updatePortion(p.id, -1)}
+                        disabled={currentQty === 0}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                          currentQty === 0
+                            ? "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
+                            : "bg-primary/10 text-primary shadow-sm active:shadow-none"
+                        }`}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </motion.button>
+                      
+                      <span className={`font-display font-black text-sm w-5 text-center ${
+                        isSelected ? "text-foreground" : "text-muted-foreground/40"
+                      }`}>
+                        {currentQty}
+                      </span>
+                      
+                      <motion.button
+                        whileTap={{ scale: 0.85 }}
+                        whileHover={{ scale: 1.05 }}
+                        onClick={() => updatePortion(p.id, 1)}
+                        className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shadow-sm active:shadow-none transition-all duration-200"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </motion.button>
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
 
+            {/* Portion validation warning */}
             <AnimatePresence>
-              {selectedPeople.length === 0 && (itemName.trim() || itemPrice) && (
+              {!isPortionsValid && hasAnyAssignment && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="text-[11px] text-destructive/80 font-medium mt-2.5 flex items-center gap-1"
+                  className="text-[11px] text-red-500 font-medium mt-2.5 flex items-center gap-1"
                 >
-                  <UserCheck className="w-3 h-3" /> Select at least one person
+                  <AlertCircle className="w-3 h-3" /> Assigned portions must equal item quantity
+                </motion.p>
+              )}
+              {isPortionsValid && hasAnyAssignment && quantity > 0 && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-[11px] text-accent font-medium mt-2.5 flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" /> Portions properly assigned
                 </motion.p>
               )}
             </AnimatePresence>
@@ -449,7 +634,7 @@ const AddFoodItems = () => {
             </h2>
             {items.length > 0 && (
               <span className="text-xs font-bold text-primary">
-                ₹{totalAssigned.toFixed(2)} added
+                ₹{totalAssignedValue.toFixed(2)} added
               </span>
             )}
           </div>
@@ -512,22 +697,23 @@ const AddFoodItems = () => {
                         </p>
                       </div>
                     </div>
+                    
+                    {/* Updated: Show per-person quantities */}
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                       <Users className="w-3 h-3 text-muted-foreground shrink-0" />
-                      {item.sharedBy.map((pid) => {
-                        const person = allParticipants.find((p) => p.id === pid);
+                      {item.sharedBy.map((entry) => {
+                        const person = allParticipants.find((p) => p.id === entry.personId);
+                        const perPersonCost = entry.quantity * item.price;
                         return (
                           <span
-                            key={pid}
+                            key={entry.personId}
                             className="text-[10px] font-semibold bg-sage-light text-accent px-2 py-0.5 rounded-full"
+                            title={`₹${perPersonCost.toFixed(2)}`}
                           >
-                            {person?.name ?? pid}
+                            {person?.name ?? entry.personId} ({entry.quantity})
                           </span>
                         );
                       })}
-                      <span className="text-[10px] text-muted-foreground ml-1">
-                        · ₹{((item.price * item.quantity) / item.sharedBy.length).toFixed(2)} each
-                      </span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 shrink-0 mt-0.5">
@@ -573,3 +759,4 @@ const AddFoodItems = () => {
 };
 
 export default AddFoodItems;
+

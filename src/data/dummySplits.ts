@@ -1,9 +1,16 @@
-/** Dummy data for recent bill splits */
+/** New interface with uneven distribution support */
+export interface SharedByEntry {
+  personId: string;
+  quantity: number;
+}
+
+/** Dummy data for recent bill splits - Updated with quantity-based distribution */
 export interface SplitItem {
   id: string;
   name: string;
   amount: number;
-  sharedBy: string[];
+  // Support both old format (string[]) and new format (SharedByEntry[])
+  sharedBy: string[] | SharedByEntry[];
 }
 
 export interface Split {
@@ -60,3 +67,4 @@ export const dummySplits: Split[] = [
     settled: true,
   },
 ];
+

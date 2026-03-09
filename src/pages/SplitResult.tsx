@@ -4,14 +4,22 @@ import { ArrowLeft, Check, Share2, CircleDollarSign } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends } from "@/data/dummyFriends";
 import { toast } from "sonner";
-import { saveSplit, createSplitObject } from "@/lib/splitStorage";
+import { saveSplit, createSplitObject, type SplitItemInput } from "@/lib/splitStorage";
+
+// New interface with uneven distribution support
+interface SharedByEntry {
+  personId: string;
+  quantity: number;
+}
 
 interface FoodItem {
   id: string;
   name: string;
   price: number;
+  quantity: number;
   emoji: string;
-  sharedBy: string[];
+  // Support both old format (string[]) and new format (SharedByEntry[])
+  sharedBy: string[] | SharedByEntry[];
 }
 
 interface PersonBreakdown {
@@ -37,27 +45,71 @@ const cardVariants = {
   }),
 };
 
+// Helper to check if sharedBy is in new format
+const isNewFormat = (sharedBy: string[] | SharedByEntry[]): sharedBy is SharedByEntry[] => {
+  return typeof sharedBy[0] === 'object' && 'personId' in (sharedBy[0] as SharedByEntry);
+};
+
 const SplitResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items = [], selectedFriendIds = [], totalAmount = 0, splitName = "" } = (location.state as any) ?? {};
+  const { items = [], selectedFriendIds = [], totalAmount = 0, splitName = "" } = (location.state as { items?: FoodItem[]; selectedFriendIds?: string[]; totalAmount?: number; splitName?: string }) ?? {};
 
-  const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
+  const friends = dummyFriends.filter((f) => selectedFriendIds?.includes(f.id));
   const allParticipants = [{ id: "me", name: "You" }, ...friends];
 
+  // Updated breakdown calculation to handle both old and new format
   const breakdowns = useMemo<PersonBreakdown[]>(() => {
     const map = new Map<string, PersonBreakdown>();
     allParticipants.forEach((p) => map.set(p.id, { id: p.id, name: p.name, items: [], total: 0 }));
 
     (items as FoodItem[]).forEach((item) => {
-      const perPerson = item.price / item.sharedBy.length;
-      item.sharedBy.forEach((pid) => {
-        const entry = map.get(pid);
-        if (entry) {
-          entry.items.push({ name: item.name, emoji: item.emoji, share: perPerson });
-          entry.total += perPerson;
-        }
-      });
+      const itemTotal = item.price * (item.quantity || 1);
+      
+      // Handle both old and new format
+      if (isNewFormat(item.sharedBy)) {
+        // New format: { personId, quantity }[]
+        const portionCost = item.price;
+        
+        item.sharedBy.forEach((entry) => {
+          const entryPersonId = entry.personId;
+          
+          // Calculate cost based on quantity assigned to this person
+          const personShare = portionCost * entry.quantity;
+          
+          const entryMap = map.get(entryPersonId);
+          if (entryMap) {
+            // Check if this item already exists for this person
+            const existingItemIndex = entryMap.items.findIndex(
+              (i) => i.name === item.name
+            );
+            
+            if (existingItemIndex >= 0) {
+              // Update existing item
+              entryMap.items[existingItemIndex].share += personShare;
+            } else {
+              // Add new item
+              entryMap.items.push({ 
+                name: item.name, 
+                emoji: item.emoji, 
+                share: personShare 
+              });
+            }
+            entryMap.total += personShare;
+          }
+        });
+      } else {
+        // Old format: string[] (equal split)
+        const perPerson = itemTotal / item.sharedBy.length;
+        
+        item.sharedBy.forEach((pid) => {
+          const entry = map.get(pid);
+          if (entry) {
+            entry.items.push({ name: item.name, emoji: item.emoji, share: perPerson });
+            entry.total += perPerson;
+          }
+        });
+      }
     });
 
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
@@ -70,7 +122,7 @@ const SplitResult = () => {
     
     // Create and save the split to localStorage
     const participants = allParticipants.map((p) => p.name);
-    const split = createSplitObject(splitName, grandTotal, items, participants);
+    const split = createSplitObject(splitName, grandTotal, items as SplitItemInput[], participants);
     saveSplit(split);
     
     toast.success("Split saved successfully", { description: "Your split has been saved." });
@@ -217,3 +269,4 @@ const SplitResult = () => {
 };
 
 export default SplitResult;
+
