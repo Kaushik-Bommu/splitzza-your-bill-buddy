@@ -149,13 +149,21 @@ const AddFoodItems = () => {
 
   const toggleAll = useCallback(() => {
     haptic(25);
-    if (Object.keys(personQuantities).length === allParticipants.length) {
+    const currentlySelected = Object.keys(personQuantities).filter(id => personQuantities[id] > 0);
+    
+    if (currentlySelected.length === allParticipants.length) {
+      // Deselect all - clear quantities
       setPersonQuantities({});
     } else {
-      // Distribute equally among all
-      distributeEqually();
+      // Select all with quantity 1 for each person
+      // (doesn't need to equal total item quantity - validation will handle that)
+      const newQuantities: Record<string, number> = {};
+      allParticipants.forEach((p) => {
+        newQuantities[p.id] = 1;
+      });
+      setPersonQuantities(newQuantities);
     }
-  }, [allParticipants, personQuantities, distributeEqually]);
+  }, [allParticipants, personQuantities]);
 
   const addItem = () => {
     if (!canAdd) return;
