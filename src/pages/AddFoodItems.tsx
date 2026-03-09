@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet, Copy, Trash2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 import { toast } from "sonner";
@@ -129,6 +129,17 @@ const AddFoodItems = () => {
     haptic(10);
     if (editingId === id) cancelEdit();
     setItems((prev) => prev.filter((i) => i.id !== id));
+    toast.success("Item removed");
+  };
+
+  const duplicateItem = (item: FoodItem) => {
+    haptic(15);
+    const copy: FoodItem = {
+      ...item,
+      id: Date.now().toString(),
+    };
+    setItems((prev) => [copy, ...prev]);
+    toast.success("Item duplicated");
   };
 
   const startEdit = (item: FoodItem) => {
@@ -531,20 +542,30 @@ const AddFoodItems = () => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 shrink-0 mt-0.5">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => startEdit(item)}
                       className="w-7 h-7 rounded-xl bg-secondary/10 flex items-center justify-center"
                       aria-label={`Edit ${item.name}`}
                     >
                       <Pencil className="w-3 h-3 text-secondary" />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => duplicateItem(item)}
+                      className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center"
+                      aria-label={`Duplicate ${item.name}`}
+                    >
+                      <Copy className="w-3 h-3 text-primary" />
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => removeItem(item.id)}
                       className="w-7 h-7 rounded-xl bg-destructive/10 flex items-center justify-center"
                       aria-label={`Remove ${item.name}`}
                     >
-                      <X className="w-3 h-3 text-destructive" />
-                    </button>
+                      <Trash2 className="w-3 h-3 text-destructive" />
+                    </motion.button>
                   </div>
                 </motion.div>
               ))
