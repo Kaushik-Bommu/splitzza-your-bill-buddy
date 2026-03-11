@@ -86,10 +86,31 @@ const AddFoodItems = () => {
     if (!canAdd) return;
     
     const newItemPrice = parseFloat(itemPrice);
-    const totalItemPrice = newItemPrice * quantity;
+    const newItemValue = newItemPrice * quantity;
     
-    // Check if adding this item would exceed the total bill amount
-    if (totalAssigned + totalItemPrice > totalAmount) {
+    // When editing an existing item, we need to account for its old value
+    // When adding a new item, we just check against totalAssigned
+    let isValid = true;
+    
+    if (editingId) {
+      // Find the item being edited
+      const oldItem = items.find(i => i.id === editingId);
+      if (oldItem) {
+        const oldValue = oldItem.price * oldItem.quantity;
+        // Calculate new total: remove old value, add new value
+        const newTotal = totalAssigned - oldValue + newItemValue;
+        if (newTotal > totalAmount) {
+          isValid = false;
+        }
+      }
+    } else {
+      // For new items, use the original validation
+      if (totalAssigned + newItemValue > totalAmount) {
+        isValid = false;
+      }
+    }
+    
+    if (!isValid) {
       haptic(30);
       toast.error("Total items exceed bill amount!", {
         description: `Remaining balance: ₹${remainingBalance.toFixed(2)}`,
