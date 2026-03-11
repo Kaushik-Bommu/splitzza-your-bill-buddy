@@ -10,6 +10,7 @@ interface FoodItem {
   id: string;
   name: string;
   price: number;
+  quantity: number;
   emoji: string;
   sharedBy: string[];
 }
@@ -17,7 +18,7 @@ interface FoodItem {
 interface PersonBreakdown {
   id: string;
   name: string;
-  items: { name: string; emoji: string; share: number }[];
+  items: { name: string; emoji: string; share: number; quantity: number; price: number }[];
   total: number;
 }
 
@@ -50,11 +51,25 @@ const SplitResult = () => {
     allParticipants.forEach((p) => map.set(p.id, { id: p.id, name: p.name, items: [], total: 0 }));
 
     (items as FoodItem[]).forEach((item) => {
-      const perPerson = item.price / item.sharedBy.length;
+      // Safety check: skip if no one is sharing this item
+      if (!item.sharedBy.length) return;
+
+      // Calculate total cost for this item (price × quantity)
+      const itemTotal = item.price * item.quantity;
+      
+      // Calculate per-person share
+      const perPerson = itemTotal / item.sharedBy.length;
+
       item.sharedBy.forEach((pid) => {
         const entry = map.get(pid);
         if (entry) {
-          entry.items.push({ name: item.name, emoji: item.emoji, share: perPerson });
+          entry.items.push({ 
+            name: item.name, 
+            emoji: item.emoji, 
+            share: perPerson,
+            quantity: item.quantity,
+            price: item.price
+          });
           entry.total += perPerson;
         }
       });
@@ -63,7 +78,11 @@ const SplitResult = () => {
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
   }, [items, allParticipants]);
 
-  const grandTotal = breakdowns.reduce((s, b) => s + b.total, 0);
+  // Calculate grand total directly from items (price × quantity)
+  const grandTotal = (items as FoodItem[]).reduce(
+    (sum, item) => sum + (item.price * item.quantity),
+    0
+  );
 
   const handleSettle = () => {
     if (navigator.vibrate) navigator.vibrate(20);
@@ -179,6 +198,9 @@ const SplitResult = () => {
                     <span className="text-xs text-foreground flex items-center gap-2">
                       <span>{item.emoji}</span>
                       <span className="font-medium">{item.name}</span>
+                      {item.quantity > 1 && (
+                        <span className="text-muted-foreground">({item.quantity} × ₹{item.price.toFixed(0)})</span>
+                      )}
                     </span>
                     <span className="text-xs font-bold text-muted-foreground">₹{item.share.toFixed(2)}</span>
                   </div>
