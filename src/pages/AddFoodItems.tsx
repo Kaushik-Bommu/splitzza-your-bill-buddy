@@ -4,6 +4,8 @@ import { ArrowLeft, Plus, Minus, X, Users, Check, Pencil, UserCheck, Wallet, Cop
 import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
 import { toast } from "sonner";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
+import LeaveConfirmationModal from "@/components/LeaveConfirmationModal";
 
 const FOOD_EMOJI_MAP: Record<string, string> = {
   pizza: "🍕", burger: "🍔", fries: "🍟", biryani: "🍛", rice: "🍚",
@@ -197,6 +199,20 @@ const AddFoodItems = () => {
 
   const balanceStyles = getBalanceStyles();
 
+  // Calculate dirty state: items added OR itemName entered OR itemPrice entered OR quantity changed
+  const isDirty = items.length > 0 || itemName.trim() !== "" || itemPrice.trim() !== "" || quantity !== 1;
+
+  // Use the unsaved changes warning hook
+  const { isModalOpen, confirmNavigation, cancelNavigation, navigateAway } = useUnsavedChangesWarning(isDirty);
+
+  const handleGoBack = () => {
+    if (isDirty) {
+      navigateAway(-1);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <motion.div
       variants={pageVariants}
@@ -211,7 +227,7 @@ const AddFoodItems = () => {
         <div className="gradient-hero px-6 pt-14 pb-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleGoBack}
               className="w-10 h-10 rounded-2xl glass-strong border border-border/30 shadow-card flex items-center justify-center"
               aria-label="Go back"
             >
@@ -589,6 +605,13 @@ const AddFoodItems = () => {
           </div>
         </div>
       </div>
+
+      {/* Unsaved changes confirmation modal */}
+      <LeaveConfirmationModal
+        isOpen={isModalOpen}
+        onConfirm={confirmNavigation}
+        onCancel={cancelNavigation}
+      />
     </motion.div>
   );
 };

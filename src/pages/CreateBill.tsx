@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, IndianRupee, UserPlus, Link2, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dummyFriends, type Friend } from "@/data/dummyFriends";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
+import LeaveConfirmationModal from "@/components/LeaveConfirmationModal";
 
 const pageVariants = {
   initial: { opacity: 0, x: 60 },
@@ -20,6 +22,14 @@ const CreateBill = () => {
 
   const isValid = splitName.trim() !== "" && parseFloat(amount) > 0 && selectedFriends.length > 0;
 
+  // Calculate dirty state: amount entered OR friends selected OR splitName entered
+  const isDirty = useMemo(() => {
+    return splitName.trim() !== "" || amount.trim() !== "" || selectedFriends.length > 0;
+  }, [splitName, amount, selectedFriends]);
+
+  // Use the unsaved changes warning hook
+  const { isModalOpen, confirmNavigation, cancelNavigation, navigateAway } = useUnsavedChangesWarning(isDirty);
+
   const toggleFriend = (id: string) => {
     setSelectedFriends((prev) =>
       prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
@@ -34,6 +44,14 @@ const CreateBill = () => {
     navigate("/add-items", {
       state: { splitName: splitName.trim(), selectedFriendIds: selectedFriends, totalAmount: parseFloat(amount) },
     });
+  };
+
+  const handleGoBack = () => {
+    if (isDirty) {
+      navigateAway(-1 as unknown as string);
+    } else {
+      navigate(-1);
+    }
   };
 
   return (
@@ -52,7 +70,7 @@ const CreateBill = () => {
       <div className="gradient-hero px-6 pt-14 pb-6">
         <div className="flex items-center gap-3 mb-2">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleGoBack}
             className="w-10 h-10 rounded-2xl glass-strong border border-border/30 shadow-card flex items-center justify-center"
             aria-label="Go back"
           >
@@ -221,6 +239,13 @@ const CreateBill = () => {
         </div>
       </div>    
     </div>
+
+    {/* Unsaved changes confirmation modal */}
+    <LeaveConfirmationModal
+      isOpen={isModalOpen}
+      onConfirm={confirmNavigation}
+      onCancel={cancelNavigation}
+    />
       
     </motion.div>
   );
