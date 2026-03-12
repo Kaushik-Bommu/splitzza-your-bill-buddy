@@ -12,31 +12,35 @@ import AddFoodItems from "./pages/AddFoodItems";
 import SplitResult from "./pages/SplitResult";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
+import { ThemeProvider } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="max-w-md mx-auto relative">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/splits" element={<Splits />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/create-bill" element={<CreateBill />} />
-            <Route path="/add-items" element={<AddFoodItems />} />
-            <Route path="/split-result" element={<SplitResult />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomNav />
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="max-w-md mx-auto relative">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/splits" element={<Splits />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/create-bill" element={<CreateBill />} />
+              <Route path="/add-items" element={<AddFoodItems />} />
+              <Route path="/split-result" element={<SplitResult />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <BottomNav />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
 export default App;
+

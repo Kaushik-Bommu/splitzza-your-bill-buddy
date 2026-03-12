@@ -1,18 +1,19 @@
-# SplitResult Settle Up Button TODO - COMPLETED ✅
+# Dark Mode Implementation TODO
 
-- [x] `isViewingSavedSplit = Boolean(state?.split)`
-- [x] Settle Up hidden on saved split view (`{!isViewingSavedSplit && (...)}`)
-- [x] Share button remains; space adjusts
+**Completed:**
+- [x] useTheme hook
+- [x] ThemeProvider in App.tsx
+- [x] Theme toggle in SettingsPage.tsx
+- [x] Smooth transitions + dark gradients/shadows in index.css
+- [x] BottomNav dark variants
+- [x] Sonner toast dark mode
 
-**Logic**: Hide save button when viewing existing splits.
+**Remaining:**
+- [ ] Update major components (SplitCard, etc.) with dark variants
+- [ ] Tailwind config shadow/color extensions
+- [ ] Test all pages
 
-```
-bun dev
-```
-- Create split: Both Share/Settle Up buttons.
-- Splits → arrow: **Only Share button**.
-
-Perfect UX. All previous fixes intact (normalization, matching).
+Test toggle: Settings → Appearance → instant theme switch + persistence.
 
 
 

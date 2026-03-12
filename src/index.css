@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  transition: 
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
 @layer base {
   :root {
     --background: 30 33% 97%;
@@ -124,7 +132,7 @@
     box-shadow: var(--shadow-glow);
   }
 
-  /* Premium gradient backgrounds */
+  /* Premium gradient backgrounds - Light */
   .gradient-hero {
     background: linear-gradient(
       160deg,
@@ -188,8 +196,69 @@
     -webkit-backdrop-filter: blur(24px) saturate(1.8);
   }
 
+  /* Dark mode gradients */
+  .dark .gradient-hero {
+    background: linear-gradient(
+      160deg,
+      hsl(var(--coral-light)) 0%,
+      hsl(var(--sage-light)) 40%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  .dark .gradient-card-warm {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--coral-light) / 0.1) 100%
+    );
+  }
+
+  .dark .gradient-card-sage {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--sage-light) / 0.1) 100%
+    );
+  }
+
+  .dark .gradient-primary-btn {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(12 76% 65%) 100%
+    );
+  }
+
+  .dark .gradient-accent-btn {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--accent)) 0%,
+      hsl(160 45% 52%) 100%
+    );
+  }
+
+  .dark .gradient-bottom-fade {
+    background: linear-gradient(
+      to top,
+      hsl(var(--background)) 0%,
+      hsl(var(--background)) 60%,
+      hsl(var(--background) / 0) 100%
+    );
+  }
+
   /* Safe area for bottom nav */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Dark shadows */
+  .dark .shadow-soft {
+    box-shadow: 0 4px 24px -4px hsl(var(--foreground) / 0.1);
+  }
+
+  .dark .shadow-card {
+    box-shadow: 0 2px 20px -4px hsl(var(--foreground) / 0.08), 0 1px 3px hsl(var(--foreground) / 0.06);
+  }
 }
+
