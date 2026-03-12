@@ -163,6 +163,7 @@ const AddFoodItems = () => {
     };
     setItems((prev) => [copy, ...prev]);
     toast.success("Item duplicated");
+    startEdit(copy);
   };
 
   const startEdit = (item: FoodItem) => {
