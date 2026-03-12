@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { dummyFriends } from "@/data/dummyFriends";
 import { toast } from "sonner";
 import { saveSplit, createSplitObject } from "@/lib/splitStorage";
+import { normalizeItems } from "@/lib/utils";
 
 interface FoodItem {
   id: string;
@@ -41,45 +42,67 @@ const cardVariants = {
 const SplitResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items = [], selectedFriendIds = [], totalAmount = 0, splitName = "" } = (location.state as any) ?? {};
+  const state = location.state as any;
+  const rawItems = state?.items ?? state?.split?.items ?? [];
+  const normalizedItems = normalizeItems(rawItems);
+  const totalAmount = state?.totalAmount ?? state?.split?.totalAmount ?? 0;
+  const splitName = state?.splitName ?? state?.split?.restaurantName ?? "";
+  const selectedFriendIds = state?.selectedFriendIds ?? [];
 
-  const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
-  const allParticipants = [{ id: "me", name: "You" }, ...friends];
+  const isViewingSavedSplit = Boolean(state?.split);
+  const splitPeople = state?.split?.people ?? [];
+  let allParticipants;
+  if (state?.split) {
+    allParticipants = splitPeople.map((name) => ({
+      id: name,
+      name
+    }));
+  } else {
+    const friends = dummyFriends.filter((f) => selectedFriendIds.includes(f.id));
+    allParticipants = [{ id: "me", name: "You" }, ...friends];
+  }
 
   const breakdowns = useMemo<PersonBreakdown[]>(() => {
     const map = new Map<string, PersonBreakdown>();
     allParticipants.forEach((p) => map.set(p.id, { id: p.id, name: p.name, items: [], total: 0 }));
 
-    (items as FoodItem[]).forEach((item) => {
-      // Safety check: skip if no one is sharing this item
-      if (!item.sharedBy.length) return;
+      normalizedItems.forEach((item) => {
+        // Safety check: skip if no one is sharing this item
+        if (!item.sharedBy.length) return;
 
-      // Calculate total cost for this item (price × quantity)
-      const itemTotal = item.price * item.quantity;
-      
-      // Calculate per-person share
-      const perPerson = itemTotal / item.sharedBy.length;
+        // Calculate total cost for this item (price × quantity)
+        const itemTotal = item.price * item.quantity;
+        
+        // Calculate per-person share
+        const perPerson = itemTotal / item.sharedBy.length;
 
-      item.sharedBy.forEach((pid) => {
-        const entry = map.get(pid);
-        if (entry) {
-          entry.items.push({ 
-            name: item.name, 
-            emoji: item.emoji, 
-            share: perPerson,
-            quantity: item.quantity,
-            price: item.price
-          });
-          entry.total += perPerson;
-        }
+        item.sharedBy.forEach((pid) => {
+          let normalizedId = pid;
+          if (pid === "me") {
+            normalizedId = "You";
+          } else {
+            const friend = dummyFriends.find((f) => f.id === pid);
+            if (friend) normalizedId = friend.name;
+          }
+          const entry = map.get(normalizedId);
+          if (entry) {
+            entry.items.push({
+              name: item.name,
+              emoji: item.emoji,
+              share: perPerson,
+              quantity: item.quantity,
+              price: item.price
+            });
+            entry.total += perPerson;
+          }
+        });
       });
-    });
 
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [items, allParticipants]);
+  }, [normalizedItems, allParticipants]);
 
   // Calculate grand total directly from items (price × quantity)
-  const grandTotal = (items as FoodItem[]).reduce(
+  const grandTotal = normalizedItems.reduce(
     (sum, item) => sum + (item.price * item.quantity),
     0
   );
@@ -89,7 +112,8 @@ const SplitResult = () => {
     
     // Create and save the split to localStorage
     const participants = allParticipants.map((p) => p.name);
-    const split = createSplitObject(splitName, grandTotal, items, participants);
+    const finalSplitName = splitName || state?.split?.restaurantName || "Split";
+    const split = createSplitObject(finalSplitName, grandTotal, normalizedItems, participants);
     saveSplit(split);
     
     toast.success("Split saved successfully", { description: "Your split has been saved." });
@@ -222,20 +246,23 @@ const SplitResult = () => {
             >
               <Share2 className="w-4 h-4" /> Share
             </motion.button>
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, type: "spring", stiffness: 300, damping: 25 }}
-              onClick={handleSettle}
-              className="flex-[2] py-4 rounded-2xl font-display font-bold text-sm gradient-accent-btn text-accent-foreground shadow-elevated flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-            >
-              <Check className="w-4 h-4" /> Settle Up
-            </motion.button>
+            {!isViewingSavedSplit && (
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, type: "spring", stiffness: 300, damping: 25 }}
+                onClick={handleSettle}
+                className="flex-[2] py-4 rounded-2xl font-display font-bold text-sm gradient-accent-btn text-accent-foreground shadow-elevated flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                <Check className="w-4 h-4" /> Settle Up
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
     </motion.div>
   );
 };
+
 
 export default SplitResult;

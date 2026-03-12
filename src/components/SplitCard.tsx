@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Check, ChevronRight, Users, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Split } from "@/data/dummySplits";
 import { format, parseISO } from "date-fns";
+import { normalizeItems } from "@/lib/utils";
 
 interface SplitCardProps {
   split: Split;
@@ -10,11 +12,15 @@ interface SplitCardProps {
 }
 
 const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
-  const yourShare = split.items.reduce((total, item) => {
-    if (item.sharedBy.includes("You")) {
-      return total + item.amount / item.sharedBy.length;
+  const navigate = useNavigate();
+
+  const normalizedItems = normalizeItems(split.items);
+  const yourShare = normalizedItems.reduce((total, item) => {
+    if (item.sharedBy.includes("me") || item.sharedBy.includes("You")) {
+      const itemTotal = item.price * item.quantity
+      return total + itemTotal / item.sharedBy.length
     }
-    return total;
+    return total
   }, 0);
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -90,7 +96,10 @@ const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
-          <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+          <ChevronRight
+            onClick={() => navigate("/split-result", { state: { split } })}
+            className="w-4 h-4 text-muted-foreground/60 cursor-pointer"
+          />
         </div>
       </div>
     </motion.div>
