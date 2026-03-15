@@ -24,10 +24,11 @@ const SettingsPage = () => {
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-display font-black text-2xl text-foreground"
+          className="font-display font-black text-2xl text-foreground dark:text-black"
         >
           Settings
         </motion.h1>
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

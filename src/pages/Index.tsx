@@ -25,9 +25,10 @@ const Index = () => {
           <div className="w-9 h-9 rounded-2xl gradient-primary-btn flex items-center justify-center shadow-glow">
             <Pizza className="w-5 h-5 text-primary-foreground" />
           </div>
-          <h1 className="font-display font-black text-2xl text-foreground tracking-tight">
+          <h1 className="font-display font-black text-2xl text-foreground dark:text-black tracking-tight">
             Splitzza
           </h1>
+
         </motion.div>
 
         <motion.p

@@ -159,10 +159,11 @@ const SplitResult = () => {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="font-display font-black text-xl text-foreground"
+              className="font-display font-black text-xl text-foreground dark:text-black"
             >
               Split Summary
             </motion.h1>
+
           </div>
         </div>
 

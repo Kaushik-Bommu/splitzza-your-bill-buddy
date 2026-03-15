@@ -36,7 +36,8 @@ const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, x: -20 }}
       transition={{ delay: index * 0.1, duration: 0.4, ease: "easeOut" }}
-      className="gradient-card-warm rounded-3xl p-5 shadow-card border border-border/30 active:scale-[0.98] transition-transform cursor-pointer relative group"
+      className="glass-premium gradient-card-warm rounded-3xl p-5 shadow-card border border-border/30 backdrop-blur-md active:scale-[0.98] transition-transform cursor-pointer relative group shadow-elevated"
+
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -53,7 +54,8 @@ const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
               {split.people.map((person) => (
                 <span
                   key={person}
-                  className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-coral-light text-primary"
+                  className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-coral-light dark:bg-muted text-primary dark:text-muted-foreground"
+
                 >
                   {person}
                 </span>
@@ -70,14 +72,15 @@ const SplitCard = ({ split, index, onDelete }: SplitCardProps) => {
             </p>
           </div>
           {split.settled ? (
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-sage-light text-accent">
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-sage-light dark:bg-muted text-accent dark:text-muted-foreground">
               <Check className="w-3 h-3" /> Settled
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-light text-secondary-foreground">
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-light dark:bg-muted text-secondary-foreground dark:text-muted-foreground">
               Pending
             </span>
           )}
+
         </div>
       </div>
 
